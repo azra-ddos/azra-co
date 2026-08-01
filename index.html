@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>azra.co — Cairkan Website. Jadi Aplikasi.</title>
+<meta name="description" content="Compile website atau file HTML jadi project Android siap-install. 100% berjalan di browser, tanpa upload ke server.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232dd4f0'/%3E%3Cstop offset='1' stop-color='%239d5cf5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 6C50 6 20 46 20 66a30 30 0 0 0 60 0C80 46 50 6 50 6Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   AZRA.CO — DESIGN TOKENS
+   Liquid state (cyan → violet) = in progress / fluid
+   Solid state (signal orange)  = compiled / done
+   ============================================================ */
+:root{
+  --void:#08080d;
+  --void-2:#0c0c14;
+  --void-3:#111119;
+  --glass: rgba(255,255,255,0.055);
+  --glass-strong: rgba(255,255,255,0.095);
+  --glass-border: rgba(255,255,255,0.13);
+  --glass-border-strong: rgba(255,255,255,0.26);
+  --flux-cyan:#2dd4f0;
+  --flux-violet:#9d5cf5;
+  --flux-pink:#e558c9;
+  --signal:#ff7a45;
+  --signal-dim:#c85a2e;
+  --text-1:#f5f5f8;
+  --text-2:#a3a3b0;
+  --text-3:#6b6b78;
+  --danger:#ff5468;
+  --success:#34e0a1;
+  --r-sm:10px;
+  --r-md:18px;
+  --r-lg:28px;
+  --r-xl:36px;
+  --font-display:'Bebas Neue', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+  --font-body:'Plus Jakarta Sans', sans-serif;
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --liquid-gradient: linear-gradient(135deg, var(--flux-cyan), var(--flux-violet) 55%, var(--flux-pink));
+  --solid-gradient: linear-gradient(135deg, var(--signal), #ffb066);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--text-1);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+input,select{ font-family:inherit; }
+::selection{ background:var(--flux-violet); color:#fff; }
+
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:var(--void); }
+::-webkit-scrollbar-thumb{ background:var(--glass-border-strong); border-radius:10px; }
+
+:focus-visible{
+  outline:2px solid var(--flux-cyan);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 24px;
+}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--flux-cyan);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.eyebrow::before{
+  content:'';
+  width:6px; height:6px;
+  border-radius:50%;
+  background:var(--flux-cyan);
+  box-shadow:0 0 10px 2px var(--flux-cyan);
+}
+
+/* ============================================================
+   NOISE + LIQUID BACKGROUND
+   ============================================================ */
+.grain{
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:2;
+  opacity:.035;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.liquid-bg{
+  position:fixed; inset:0;
+  z-index:0;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 0%, #14101f 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 20%, #0c1a20 0%, transparent 55%),
+    var(--void);
+}
+.orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(70px);
+  opacity:.4;
+  will-change:transform;
+}
+.orb1{ width:520px; height:520px; top:-160px; left:-120px; background:radial-gradient(circle, var(--flux-violet), transparent 70%); animation:drift1 26s ease-in-out infinite; }
+.orb2{ width:460px; height:460px; top:20%; right:-160px; background:radial-gradient(circle, var(--flux-cyan), transparent 70%); animation:drift2 32s ease-in-out infinite; }
+.orb3{ width:380px; height:380px; bottom:-120px; left:30%; background:radial-gradient(circle, var(--flux-pink), transparent 70%); opacity:.28; animation:drift3 22s ease-in-out infinite; }
+
+@keyframes drift1{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(60px,80px) scale(1.12);} }
+@keyframes drift2{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-70px,50px) scale(0.9);} }
+@keyframes drift3{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(40px,-60px) scale(1.08);} }
+
+/* ============================================================
+   LIQUID GLASS PRIMITIVES
+   ============================================================ */
+.glass{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--r-lg);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.20),
+    0 20px 60px -20px rgba(0,0,0,.6);
+  position:relative;
+}
+.glass::before{
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  padding:1px;
+  background:linear-gradient(160deg, rgba(255,255,255,.28), rgba(255,255,255,0) 40%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+
+.btn{
+  font-family:var(--font-mono);
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:.02em;
+  border:none;
+  border-radius:999px;
+  padding:14px 26px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:box-shadow .25s var(--ease-out), filter .25s var(--ease-out);
+  will-change:transform;
+}
+.btn-primary{
+  background:var(--liquid-gradient);
+  color:#08080d;
+  box-shadow:0 8px 30px -8px rgba(157,92,245,.55);
+}
+.btn-primary:hover{ filter:brightness(1.08); box-shadow:0 10px 36px -6px rgba(157,92,245,.7); }
+.btn-primary:disabled{ opacity:.45; filter:grayscale(.4); cursor:not-allowed; }
+.btn-ghost{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-1);
+}
+.btn-ghost:hover{ background:var(--glass-strong); border-color:var(--glass-border-strong); }
+.btn-solid{
+  background:var(--solid-gradient);
+  color:#1a0d02;
+  box-shadow:0 8px 26px -8px rgba(255,122,69,.55);
+}
+.btn-sm{ padding:9px 16px; font-size:12px; }
+
+.jelly{ transform:translate(0,0) scale(1); }
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.navbar{
+  position:sticky; top:0; z-index:40;
+  padding:14px 0;
+}
+.navbar-inner{
+  max-width:1180px;
+  margin:0 auto;
+  padding:10px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-radius:999px;
+}
+.logo{
+  font-family:var(--font-display);
+  font-size:22px;
+  letter-spacing:.02em;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.logo-dot{
+  width:9px; height:9px;
+  border-radius:50%;
+  background:var(--liquid-gradient);
+  box-shadow:0 0 12px 2px rgba(157,92,245,.7);
+}
+.nav-links{
+  display:flex;
+  gap:28px;
+  font-family:var(--font-mono);
+  font-size:13px;
+  color:var(--text-2);
+}
+.nav-links a:hover{ color:var(--text-1); }
+.nav-cta{ display:flex; align-items:center; gap:14px; }
+.nav-links-mobile-toggle{ display:none; }
+
+@media (max-width:760px){
+  .nav-links{ display:none; }
+}
+
+/* ============================================================
+   HERO / TOOL
+   ============================================================ */
+.hero{
+  padding:64px 0 40px;
+  position:relative;
+  z-index:1;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.05fr .85fr;
+  gap:56px;
+  align-items:center;
+}
+@media (max-width:900px){
+  .hero-grid{ grid-template-columns:1fr; gap:36px; }
+}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(42px, 6.4vw, 76px);
+  line-height:.98;
+  letter-spacing:.005em;
+  margin:18px 0 20px;
+}
+.hero-title .liquid-word{
+  background:var(--liquid-gradient);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.hero-sub{
+  font-size:17px;
+  color:var(--text-2);
+  max-width:480px;
+  margin:0 0 32px;
+}
+.hero-sub b{ color:var(--text-1); font-weight:600; }
+
+/* phone mockup */
+.phone{
+  width:260px;
+  height:540px;
+  margin:0 auto;
+  border-radius:46px;
+  padding:10px;
+  background:linear-gradient(160deg, #1b1b26, #0a0a10);
+  border:1px solid var(--glass-border-strong);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.04);
+  position:relative;
+}
+.phone-notch{
+  position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  width:90px; height:22px; background:#000; border-radius:14px; z-index:3;
+}
+.phone-screen{
+  width:100%; height:100%;
+  border-radius:36px;
+  overflow:hidden;
+  position:relative;
+  background:radial-gradient(ellipse at 50% 20%, #171025, #06060a 75%);
+}
+.blob-wrap{ position:absolute; inset:0; filter:url(#goo); }
+.blob{
+  position:absolute;
+  border-radius:50%;
+  mix-blend-mode:screen;
+}
+.blob-a{ width:120px; height:120px; background:var(--flux-cyan); top:30%; left:20%; opacity:.85; animation:blobA 9s ease-in-out infinite; }
+.blob-b{ width:140px; height:140px; background:var(--flux-violet); top:45%; left:45%; opacity:.85; animation:blobB 11s ease-in-out infinite; }
+.blob-c{ width:90px; height:90px; background:var(--flux-pink); top:55%; left:25%; opacity:.75; animation:blobC 7.5s ease-in-out infinite; }
+@keyframes blobA{ 0%,100%{ transform:translate(0,0);} 50%{ transform:translate(30px,40px);} }
+@keyframes blobB{ 0%,100%{ transform:translate(0,0);} 50%{ transform:translate(-40px,-20px);} }
+@keyframes blobC{ 0%,100%{ transform:translate(0,0);} 50%{ transform:translate(25px,-35px);} }
+.phone-caption{
+  position:absolute; bottom:26px; left:0; right:0;
+  text-align:center;
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:rgba(255,255,255,.55);
+  text-transform:uppercase;
+}
+
+/* ============================================================
+   TOOL PANEL
+   ============================================================ */
+.tool-panel{
+  padding:8px;
+  margin-top:8px;
+}
+.tabs{
+  display:flex;
+  gap:4px;
+  padding:5px;
+  position:relative;
+  margin-bottom:4px;
+}
+.tab-btn{
+  flex:1;
+  position:relative;
+  z-index:2;
+  background:transparent;
+  border:none;
+  color:var(--text-2);
+  font-family:var(--font-mono);
+  font-size:13px;
+  font-weight:600;
+  padding:12px 10px;
+  border-radius:999px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:color .3s;
+}
+.tab-btn.active{ color:#08080d; }
+.tab-indicator{
+  position:absolute;
+  top:5px; bottom:5px; left:5px;
+  width:calc(50% - 5px);
+  border-radius:999px;
+  background:var(--liquid-gradient);
+  z-index:1;
+  transition:transform .5s var(--ease-spring);
+  box-shadow:0 6px 24px -6px rgba(157,92,245,.6);
+}
+
+.tab-panel{ padding:22px 22px 8px; }
+.tab-panel[hidden]{ display:none; }
+
+.field{ margin-bottom:18px; }
+.field-label{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--text-2);
+  margin-bottom:9px;
+}
+.field-input{
+  width:100%;
+  background:rgba(0,0,0,.25);
+  border:1px solid var(--glass-border);
+  border-radius:var(--r-md);
+  padding:15px 16px;
+  color:var(--text-1);
+  font-size:15px;
+  font-family:var(--font-body);
+  transition:border-color .2s, background .2s;
+}
+.field-input::placeholder{ color:var(--text-3); }
+.field-input:focus{ border-color:var(--flux-cyan); background:rgba(0,0,0,.35); outline:none; }
+.field-input.invalid{ border-color:var(--danger); animation:shake .4s; }
+.field-error{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--danger);
+  margin-top:7px;
+  display:none;
+}
+.field-error.show{ display:block; }
+@keyframes shake{
+  10%,90%{ transform:translateX(-1px); }
+  20%,80%{ transform:translateX(3px); }
+  30%,50%,70%{ transform:translateX(-6px); }
+  40%,60%{ transform:translateX(6px); }
+}
+
+.dropzone{
+  border:1.5px dashed var(--glass-border-strong);
+  border-radius:var(--r-md);
+  padding:36px 20px;
+  text-align:center;
+  transition:border-color .2s, background .2s;
+  cursor:pointer;
+}
+.dropzone.dragover{ border-color:var(--flux-cyan); background:rgba(45,212,240,.06); }
+.dropzone-icon{ font-size:30px; margin-bottom:10px; }
+.dropzone-text{ font-size:14px; color:var(--text-2); }
+.dropzone-text b{ color:var(--flux-cyan); font-weight:600; }
+.dropzone-hint{ font-family:var(--font-mono); font-size:11px; color:var(--text-3); margin-top:8px; }
+.file-chip{
+  display:flex; align-items:center; gap:12px;
+  background:rgba(0,0,0,.25);
+  border:1px solid var(--glass-border);
+  border-radius:var(--r-md);
+  padding:13px 16px;
+  margin-top:14px;
+}
+.file-chip[hidden]{ display:none; }
+.file-chip-icon{
+  width:34px; height:34px; border-radius:9px;
+  background:var(--liquid-gradient);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:12px; font-weight:700; color:#08080d;
+  flex-shrink:0;
+}
+.file-chip-name{ font-size:13px; font-weight:600; }
+.file-chip-size{ font-family:var(--font-mono); font-size:11px; color:var(--text-3); }
+.file-chip-remove{
+  margin-left:auto; background:none; border:none; color:var(--text-3);
+  font-size:18px; line-height:1; padding:4px;
+}
+.file-chip-remove:hover{ color:var(--danger); }
+
+/* config accordion */
+.config-toggle{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px;
+  border-top:1px solid var(--glass-border);
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  color:var(--text-2);
+  background:none; border-left:none;border-right:none;border-bottom:none;
+  width:100%;
+}
+.config-toggle:hover{ color:var(--text-1); }
+.chev{ transition:transform .35s var(--ease-spring); }
+.config-toggle[aria-expanded="true"] .chev{ transform:rotate(180deg); }
+.config-body{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .45s var(--ease-out);
+}
+.config-body.open{ max-height:900px; }
+.config-inner{ padding:6px 22px 22px; display:grid; grid-template-columns:1fr 1fr; gap:16px 18px; }
+@media (max-width:640px){ .config-inner{ grid-template-columns:1fr; } }
+.config-inner .field{ margin-bottom:0; }
+.color-row{ display:flex; gap:10px; }
+.color-swatch{
+  width:34px; height:34px; border-radius:50%;
+  border:2px solid transparent;
+  cursor:pointer;
+  transition:transform .2s var(--ease-spring), border-color .2s;
+}
+.color-swatch.active{ border-color:#fff; transform:scale(1.12); }
+.segmented{ display:flex; gap:6px; background:rgba(0,0,0,.25); border:1px solid var(--glass-border); border-radius:var(--r-sm); padding:4px; }
+.segmented button{
+  flex:1; background:none; border:none; color:var(--text-2);
+  font-family:var(--font-mono); font-size:12px; padding:9px 6px; border-radius:7px;
+  transition:background .2s, color .2s;
+}
+.segmented button.active{ background:var(--glass-strong); color:var(--text-1); }
+
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
+.toggle-row-label{ font-size:13.5px; }
+.toggle-row-hint{ font-size:11.5px; color:var(--text-3); margin-top:2px; }
+.switch{ position:relative; width:44px; height:26px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; position:absolute; }
+.switch-track{
+  position:absolute; inset:0; background:rgba(255,255,255,.14);
+  border-radius:999px; transition:background .25s;
+}
+.switch-thumb{
+  position:absolute; top:3px; left:3px; width:20px; height:20px;
+  background:#fff; border-radius:50%;
+  transition:transform .3s var(--ease-spring);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.switch input:checked + .switch-track{ background:var(--liquid-gradient); }
+.switch input:checked + .switch-track .switch-thumb{ transform:translateX(18px); }
+
+.compile-row{ padding:20px 22px 22px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.compile-note{ font-family:var(--font-mono); font-size:11px; color:var(--text-3); flex:1; min-width:180px; }
+
+/* ============================================================
+   PIPELINE
+   ============================================================ */
+.pipeline-overlay{
+  position:fixed; inset:0; z-index:100;
+  background:rgba(4,4,8,.72);
+  backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  opacity:0; pointer-events:none;
+  transition:opacity .35s var(--ease-out);
+}
+.pipeline-overlay.show{ opacity:1; pointer-events:auto; }
+.pipeline-card{
+  width:100%; max-width:440px;
+  padding:32px 28px;
+  text-align:center;
+}
+.pipeline-icon{
+  width:76px; height:76px; margin:0 auto 18px;
+  border-radius:24px;
+  background:var(--liquid-gradient);
+  display:flex; align-items:center; justify-content:center;
+  filter:blur(0px);
+  transition:filter .6s var(--ease-out), border-radius .6s var(--ease-out), background .6s;
+}
+.pipeline-icon.liquefy{ filter:blur(9px); border-radius:50%; }
+.pipeline-icon.solidify{ background:var(--solid-gradient); filter:blur(0); border-radius:22px; }
+.pipeline-title{ font-family:var(--font-display); font-size:26px; margin:0 0 24px; letter-spacing:.01em; }
+.pipeline-steps{ text-align:left; display:flex; flex-direction:column; gap:14px; margin-bottom:22px; }
+.pstep{ display:flex; align-items:center; gap:12px; opacity:.35; transition:opacity .3s; }
+.pstep.active{ opacity:1; }
+.pstep.done{ opacity:.7; }
+.pstep-dot{
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  border:2px solid var(--glass-border-strong);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px;
+  transition:border-color .3s, background .3s;
+}
+.pstep.active .pstep-dot{ border-color:var(--flux-cyan); box-shadow:0 0 0 4px rgba(45,212,240,.15); }
+.pstep.done .pstep-dot{ background:var(--success); border-color:var(--success); color:#08080d; }
+.pstep-label{ font-family:var(--font-mono); font-size:13px; }
+.pipeline-bar{ height:5px; border-radius:999px; background:rgba(255,255,255,.09); overflow:hidden; }
+.pipeline-bar-fill{ height:100%; width:0%; background:var(--liquid-gradient); border-radius:999px; transition:width .4s var(--ease-out); }
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+.result-section{ margin-top:8px; }
+.result-section[hidden]{ display:none; }
+.result-inner{ padding:30px 26px; display:grid; grid-template-columns:auto 1fr; gap:22px; align-items:center; }
+@media (max-width:560px){ .result-inner{ grid-template-columns:1fr; text-align:center; } }
+.result-icon-canvas{ width:84px; height:84px; border-radius:22px; box-shadow:0 14px 34px -10px rgba(255,122,69,.5); }
+.result-title{ font-family:var(--font-display); font-size:24px; letter-spacing:.01em; }
+.result-meta{ font-family:var(--font-mono); font-size:12px; color:var(--text-2); display:flex; gap:14px; flex-wrap:wrap; margin-top:6px; }
+@media (max-width:560px){ .result-meta{ justify-content:center; } }
+.result-actions{ grid-column:1 / -1; display:flex; gap:12px; margin-top:6px; flex-wrap:wrap; }
+@media (max-width:560px){ .result-actions{ justify-content:center; } }
+
+.next-steps{ margin-top:18px; grid-column:1/-1; }
+.next-steps-label{ font-family:var(--font-mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); margin-bottom:12px; }
+.next-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media (max-width:700px){ .next-grid{ grid-template-columns:1fr; } }
+.next-card{ padding:16px; border-radius:var(--r-md); }
+.next-card-title{ font-size:13.5px; font-weight:700; margin-bottom:6px; }
+.next-card code{ display:block; font-family:var(--font-mono); font-size:11.5px; color:var(--flux-cyan); background:rgba(0,0,0,.3); padding:7px 9px; border-radius:7px; margin-top:8px; overflow-x:auto; }
+.next-card p{ font-size:12px; color:var(--text-2); margin:0; line-height:1.5; }
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+.section-head{ margin-bottom:30px; }
+.section-title{ font-family:var(--font-display); font-size:clamp(28px,4vw,40px); margin:14px 0 8px; letter-spacing:.01em; }
+.section-sub{ color:var(--text-2); font-size:15px; max-width:520px; }
+.history-section, .features-section, .how-section, .faq-section{ padding:70px 0; position:relative; z-index:1; }
+.history-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+.history-card{ padding:16px; display:flex; gap:12px; align-items:flex-start; }
+.history-icon{ width:44px; height:44px; border-radius:12px; flex-shrink:0; }
+.history-name{ font-weight:700; font-size:14px; }
+.history-pkg{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-3); margin-top:2px; word-break:break-all; }
+.history-date{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-3); margin-top:6px; }
+.history-actions{ display:flex; gap:8px; margin-top:10px; }
+.history-actions button{ background:none; border:none; font-family:var(--font-mono); font-size:11px; color:var(--text-2); padding:4px 0; }
+.history-actions button:hover{ color:var(--flux-cyan); }
+.history-actions button.del:hover{ color:var(--danger); }
+.history-empty{ padding:40px 20px; text-align:center; color:var(--text-3); font-family:var(--font-mono); font-size:13px; }
+
+/* ============================================================
+   FEATURES — asymmetric bento
+   ============================================================ */
+.bento{ display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:minmax(150px,auto); gap:14px; }
+@media (max-width:900px){ .bento{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .bento{ grid-template-columns:1fr; } }
+.bento-item{ padding:26px; display:flex; flex-direction:column; justify-content:flex-end; }
+.bento-item.big{ grid-column:span 2; grid-row:span 2; }
+@media (max-width:560px){ .bento-item.big{ grid-column:span 1; grid-row:span 1; } }
+.bento-icon{ font-size:26px; margin-bottom:14px; }
+.bento-title{ font-weight:700; font-size:16px; margin-bottom:6px; }
+.bento-item.big .bento-title{ font-size:21px; }
+.bento-desc{ font-size:13px; color:var(--text-2); line-height:1.55; }
+
+/* ============================================================
+   HOW IT WORKS
+   ============================================================ */
+.how-list{ position:relative; display:flex; flex-direction:column; gap:0; margin-top:10px; }
+.how-item{ display:flex; gap:22px; padding:26px 0; border-top:1px solid var(--glass-border); }
+.how-item:last-child{ border-bottom:1px solid var(--glass-border); }
+.how-num{ font-family:var(--font-display); font-size:34px; color:transparent; -webkit-text-stroke:1.5px var(--glass-border-strong); flex-shrink:0; width:60px; }
+.how-body h3{ font-size:17px; margin:0 0 6px; }
+.how-body p{ font-size:14px; color:var(--text-2); margin:0; max-width:460px; }
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+.faq-item{ margin-bottom:12px; overflow:hidden; }
+.faq-q{
+  width:100%; background:none; border:none; color:var(--text-1);
+  padding:19px 22px; text-align:left; font-size:14.5px; font-weight:600;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.faq-q .chev{ flex-shrink:0; color:var(--text-3); }
+.faq-a{ max-height:0; overflow:hidden; transition:max-height .4s var(--ease-out); }
+.faq-a-inner{ padding:0 22px 20px; font-size:13.5px; color:var(--text-2); line-height:1.65; }
+.faq-item.open .faq-a{ max-height:260px; }
+.faq-item.open .faq-q .chev{ transform:rotate(180deg); color:var(--flux-cyan); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{ padding:60px 0 40px; position:relative; z-index:1; }
+.footer-inner{ padding:40px 34px; }
+.footer-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:30px; flex-wrap:wrap; }
+.footer-tagline{ color:var(--text-2); font-size:14px; max-width:320px; margin-top:12px; }
+.footer-cols{ display:flex; gap:56px; flex-wrap:wrap; }
+.footer-col-title{ font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); margin-bottom:12px; }
+.footer-col a{ display:block; font-size:13.5px; color:var(--text-2); margin-bottom:9px; }
+.footer-col a:hover{ color:var(--text-1); }
+.footer-bottom{ margin-top:40px; padding-top:24px; border-top:1px solid var(--glass-border); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-3); }
+
+/* reveal on scroll */
+.reveal{ opacity:0; transform:translateY(22px); transition:opacity .7s var(--ease-out), transform .7s var(--ease-out); }
+.reveal.in{ opacity:1; transform:translateY(0); }
+
+/* toast */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+  padding:13px 20px; border-radius:999px; z-index:200;
+  font-family:var(--font-mono); font-size:12.5px;
+  opacity:0; pointer-events:none; transition:opacity .3s, transform .3s var(--ease-spring);
+  display:flex; align-items:center; gap:9px; white-space:nowrap;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
+.visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* ============================================================
+   BACKEND CONNECTION — status banner
+   ============================================================ */
+.server-status{
+  display:flex; align-items:center; gap:10px;
+  margin:14px 22px 0;
+  padding:11px 14px;
+  border-radius:var(--r-sm);
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--glass-border);
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  color:var(--text-2);
+  transition:border-color .3s, background .3s;
+}
+.server-status-dot{
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  background:var(--text-3);
+  animation:pulseDot 1.6s ease-in-out infinite;
+}
+@keyframes pulseDot{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+.server-status[data-state="online"]{ border-color:rgba(52,224,161,.35); background:rgba(52,224,161,.07); }
+.server-status[data-state="online"] .server-status-dot{ background:var(--success); box-shadow:0 0 8px 1px var(--success); animation:none; }
+.server-status[data-state="online"] .server-status-text{ color:var(--success); }
+.server-status[data-state="offline"]{ border-color:rgba(255,84,104,.3); background:rgba(255,84,104,.06); }
+.server-status[data-state="offline"] .server-status-dot{ background:var(--danger); animation:none; }
+.server-status[data-state="offline"] .server-status-text{ color:#ff8894; }
+.server-status-link{ margin-left:auto; color:var(--flux-cyan); flex-shrink:0; text-decoration:underline; text-underline-offset:2px; }
+
+/* ============================================================
+   CONFIG — subsections, package-id lock, icon picker
+   ============================================================ */
+.config-body.open{ max-height:3000px; }
+.config-subhead{
+  grid-column:1/-1;
+  font-family:var(--font-mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--flux-cyan);
+  margin:16px 0 0;
+  padding-top:14px;
+  border-top:1px solid var(--glass-border);
+}
+.config-inner .config-subhead:first-child{ margin-top:0; padding-top:0; border-top:none; }
+
+.pkg-group{
+  display:flex; align-items:stretch;
+  border:1px solid var(--glass-border);
+  border-radius:var(--r-md);
+  overflow:hidden;
+  background:rgba(0,0,0,.25);
+  transition:border-color .2s;
+}
+.pkg-group:focus-within{ border-color:var(--flux-cyan); }
+.pkg-prefix{
+  display:flex; align-items:center;
+  padding:0 12px;
+  font-family:var(--font-mono); font-size:12.5px;
+  color:var(--text-3);
+  background:rgba(255,255,255,.04);
+  border-right:1px solid var(--glass-border);
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.pkg-suffix{ border:none !important; background:transparent !important; border-radius:0 !important; }
+.pkg-suffix:focus{ border:none !important; background:transparent !important; }
+
+.icon-picker{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.icon-preview-canvas{
+  width:56px; height:56px; border-radius:16px; flex-shrink:0;
+  box-shadow:0 8px 20px -8px rgba(0,0,0,.6);
+}
+.icon-picker-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.icon-picker-hint{ font-family:var(--font-mono); font-size:11px; color:var(--text-3); width:100%; }
+
+/* ============================================================
+   RESULT — direct-APK block
+   ============================================================ */
+.result-apk-block{ grid-column:1/-1; }
+.result-apk-block[hidden]{ display:none; }
+.result-apk-status{
+  font-family:var(--font-mono); font-size:12.5px; color:var(--text-2);
+  display:flex; align-items:center; gap:10px;
+  padding:12px 14px; border-radius:var(--r-sm);
+  background:rgba(0,0,0,.22); border:1px solid var(--glass-border);
+  margin-bottom:10px;
+}
+.result-apk-status .dot{ width:7px; height:7px; border-radius:50%; background:var(--flux-cyan); animation:pulseDot 1.2s ease-in-out infinite; flex-shrink:0; }
+.result-apk-status.done .dot{ background:var(--success); animation:none; }
+.result-apk-status.failed .dot{ background:var(--danger); animation:none; }
+
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="goo">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur"/>
+    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo"/>
+  </filter>
+</svg>
+
+<div class="grain"></div>
+<div class="liquid-bg" aria-hidden="true">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav class="navbar">
+  <div class="navbar-inner glass">
+    <a href="#top" class="logo"><span class="logo-dot"></span>azra<span style="color:var(--text-3)">.</span>co</a>
+    <div class="nav-links">
+      <a href="#fitur">Fitur</a>
+      <a href="#cara-kerja">Cara Kerja</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#tool" class="btn btn-primary btn-sm jelly">Mulai Compile</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+
+<!-- ============ HERO / TOOL ============ -->
+<section class="hero" id="tool">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">website → android project</span>
+        <h1 class="hero-title">Cairkan<br>Website.<br><span class="liquid-word">Jadi Aplikasi.</span></h1>
+        <p class="hero-sub">Tempel URL atau upload HTML — azra.co menyusunnya jadi <b>project Android</b> lengkap dengan ikon, manifest, dan konfigurasi WebView. Tinggal build, langsung terpasang di HP.</p>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="blob-wrap">
+              <div class="blob blob-a"></div>
+              <div class="blob blob-b"></div>
+              <div class="blob blob-c"></div>
+            </div>
+            <div class="phone-caption">azra.co</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL PANEL -->
+    <div class="glass tool-panel" style="margin-top:44px">
+      <div class="tabs">
+        <div class="tab-indicator" id="tabIndicator"></div>
+        <button class="tab-btn active jelly" data-tab="url" id="tabBtnUrl" role="tab" aria-selected="true">🔗 Dari URL</button>
+        <button class="tab-btn jelly" data-tab="html" id="tabBtnHtml" role="tab" aria-selected="false">📄 Upload HTML</button>
+      </div>
+
+      <div class="server-status" id="serverStatus" data-state="checking">
+        <span class="server-status-dot"></span>
+        <span class="server-status-text" id="serverStatusText">Mengecek backend Termux…</span>
+        <a href="#faq" class="server-status-link" id="serverStatusLink" hidden>cara jalankan ↗</a>
+      </div>
+
+      <div class="tab-panel" data-tab-content="url" id="panelUrl">
+        <div class="field">
+          <label class="field-label" for="urlInput">Alamat Website</label>
+          <input type="text" id="urlInput" class="field-input" placeholder="https://situskamu.com" autocomplete="off" spellcheck="false">
+          <div class="field-error" id="urlError">URL tidak valid — pastikan diawali dengan http:// atau https://</div>
+        </div>
+      </div>
+
+      <div class="tab-panel" data-tab-content="html" id="panelHtml" hidden>
+        <div class="field">
+          <label class="field-label">File HTML</label>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload file HTML">
+            <div class="dropzone-icon">📄</div>
+            <div class="dropzone-text"><b>Klik untuk pilih file</b> atau seret ke sini</div>
+            <div class="dropzone-hint">.HTML — MAKS 5MB</div>
+          </div>
+          <input type="file" id="htmlFileInput" accept=".html,.htm" class="visually-hidden">
+          <div class="file-chip" id="fileChip" hidden>
+            <div class="file-chip-icon">.H</div>
+            <div>
+              <div class="file-chip-name" id="fileChipName">-</div>
+              <div class="file-chip-size" id="fileChipSize">-</div>
+            </div>
+            <button class="file-chip-remove" id="fileChipRemove" aria-label="Hapus file" type="button">✕</button>
+          </div>
+          <div class="field-error" id="htmlError">File harus berformat .html dan tidak kosong</div>
+        </div>
+      </div>
+
+      <button class="config-toggle" id="configToggle" aria-expanded="false">
+        <span>⚙ Konfigurasi Aplikasi</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="config-body" id="configBody">
+        <div class="config-inner">
+
+          <div class="config-subhead">Umum</div>
+          <div class="field">
+            <label class="field-label" for="appNameInput">Nama Aplikasi</label>
+            <input type="text" id="appNameInput" class="field-input" placeholder="Aplikasi Saya" maxlength="30">
+          </div>
+          <div class="field">
+            <label class="field-label" for="packageSuffixInput">Package ID</label>
+            <div class="pkg-group">
+              <span class="pkg-prefix">🔒 com.azra.</span>
+              <input type="text" id="packageSuffixInput" class="field-input pkg-suffix" placeholder="appsaya" spellcheck="false">
+            </div>
+            <div class="field-error" id="packageError">Setelah prefix: huruf kecil & titik saja, mis. appsaya atau appsaya.pro</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Versi Aplikasi</label>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="versionNameInput" class="field-input" placeholder="1.0" value="1.0" style="flex:1" aria-label="Version name">
+              <input type="number" id="versionCodeInput" class="field-input" placeholder="1" value="1" min="1" style="width:84px" aria-label="Version code">
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label class="field-label">Ikon Aplikasi</label>
+            <div class="icon-picker">
+              <canvas id="iconPreviewCanvas" width="56" height="56" class="icon-preview-canvas"></canvas>
+              <div class="icon-picker-actions">
+                <button type="button" class="btn btn-ghost btn-sm jelly" id="iconUploadBtn">Upload Ikon</button>
+                <button type="button" class="btn btn-ghost btn-sm jelly" id="iconResetBtn" hidden>Pakai Otomatis</button>
+              </div>
+              <input type="file" id="iconFileInput" accept="image/png,image/jpeg,image/webp" class="visually-hidden">
+              <div class="icon-picker-hint" id="iconPickerHint">Otomatis dari nama &amp; warna aplikasi</div>
+            </div>
+          </div>
+
+          <div class="config-subhead">Tampilan</div>
+          <div class="field">
+            <label class="field-label">Warna Utama</label>
+            <div class="color-row" id="colorRow"></div>
+          </div>
+          <div class="field">
+            <label class="field-label">Orientasi Layar</label>
+            <div class="segmented" id="orientationSeg">
+              <button type="button" class="active" data-value="unspecified">Otomatis</button>
+              <button type="button" data-value="portrait">Portrait</button>
+              <button type="button" data-value="landscape">Landscape</button>
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Splash Screen</div><div class="toggle-row-hint">Layar pembuka pakai ikon & warna app</div></div>
+              <label class="switch"><input type="checkbox" id="optSplash" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Progress Bar Loading</div><div class="toggle-row-hint">Garis tipis di atas saat halaman memuat</div></div>
+              <label class="switch"><input type="checkbox" id="optLoadingBar" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Mode Layar Penuh</div><div class="toggle-row-hint">Sembunyikan status bar & navigation bar</div></div>
+              <label class="switch"><input type="checkbox" id="optFullscreen" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Mode Gelap Paksa</div><div class="toggle-row-hint">Paksa dark mode kalau CSS website mendukung</div></div>
+              <label class="switch"><input type="checkbox" id="optForceDark"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+          </div>
+
+          <div class="config-subhead">Perilaku WebView</div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Izinkan Zoom</div><div class="toggle-row-hint">Pinch-to-zoom di dalam halaman</div></div>
+              <label class="switch"><input type="checkbox" id="optZoom"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Simpan Offline</div><div class="toggle-row-hint">Cache halaman untuk akses tanpa internet</div></div>
+              <label class="switch"><input type="checkbox" id="optOffline" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Tarik untuk Refresh</div><div class="toggle-row-hint">Swipe-down untuk reload halaman</div></div>
+              <label class="switch"><input type="checkbox" id="optRefresh" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Upload File</div><div class="toggle-row-hint">Aktifkan input file di website (kamera/galeri)</div></div>
+              <label class="switch"><input type="checkbox" id="optFileUpload" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Tangani Download</div><div class="toggle-row-hint">File dari web otomatis masuk folder Download</div></div>
+              <label class="switch"><input type="checkbox" id="optDownload" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Link ke Domain Lain</label>
+            <div class="segmented" id="externalLinkSeg">
+              <button type="button" class="active" data-value="app">Dalam App</button>
+              <button type="button" data-value="browser">Browser Luar</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="userAgentInput">User Agent <span style="color:var(--text-3); text-transform:none; letter-spacing:0;">(opsional)</span></label>
+            <input type="text" id="userAgentInput" class="field-input" placeholder="Kosongkan = default WebView">
+          </div>
+
+          <div class="config-subhead">Izin &amp; Keamanan</div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Kamera</div><div class="toggle-row-hint">Untuk getUserMedia / scan barcode di website</div></div>
+              <label class="switch"><input type="checkbox" id="optPermCamera"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Lokasi</div><div class="toggle-row-hint">Untuk Geolocation API</div></div>
+              <label class="switch"><input type="checkbox" id="optPermLocation"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Mikrofon</div><div class="toggle-row-hint">Untuk rekam suara / voice input</div></div>
+              <label class="switch"><input type="checkbox" id="optPermMic"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Penyimpanan</div><div class="toggle-row-hint">Baca/tulis file di perangkat</div></div>
+              <label class="switch"><input type="checkbox" id="optPermStorage"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-row-label">Konfirmasi Keluar</div><div class="toggle-row-hint">Tekan back 2× untuk keluar dari app</div></div>
+              <label class="switch"><input type="checkbox" id="optExitConfirm" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="compile-row">
+        <button class="btn btn-primary jelly" id="compileBtn">Compile ke Android →</button>
+        <button class="btn btn-solid jelly" id="compileApkBtn" hidden>⚡ Compile Langsung ke .APK</button>
+        <div class="compile-note" id="compileNote">Generate project 100% di browser kamu — tidak ada yang diupload, kecuali kamu pilih compile langsung ke .apk lewat backend sendiri.</div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <section class="result-section glass" id="resultSection" hidden style="margin-top:16px;">
+      <div class="result-inner">
+        <canvas class="result-icon-canvas" id="resultIconCanvas" width="84" height="84"></canvas>
+        <div>
+          <div class="result-title" id="resultTitle">Project Siap.</div>
+          <div class="result-meta">
+            <span id="resultAppName">-</span>
+            <span id="resultPkg">-</span>
+            <span id="resultSize">-</span>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-solid jelly" id="downloadBtn">Unduh Project (.zip)</button>
+          <button class="btn btn-ghost jelly" id="buildAnotherBtn">Compile Lagi</button>
+        </div>
+
+        <div class="result-apk-block" id="resultApkBlock" hidden>
+          <div class="result-apk-status" id="resultApkStatus"><span class="dot"></span><span id="resultApkStatusText">Mengirim ke backend…</span></div>
+          <button class="btn btn-solid jelly" id="downloadApkBtn" hidden>📱 Download APK →</button>
+        </div>
+
+        <div class="next-steps" id="nextSteps">
+          <div class="next-steps-label">Langkah Selanjutnya — Ubah Project Jadi File .APK</div>
+          <div class="next-grid">
+            <div class="next-card glass">
+              <div class="next-card-title">🅰 Android Studio</div>
+              <p>Extract zip, buka folder-nya sebagai project, lalu klik tombol Run ▶</p>
+            </div>
+            <div class="next-card glass">
+              <div class="next-card-title">⌨ Termux / Command Line</div>
+              <p>Dari terminal dengan Android SDK terpasang:</p>
+              <code>gradle assembleDebug</code>
+            </div>
+            <div class="next-card glass">
+              <div class="next-card-title">⚡ Backend azra.co</div>
+              <p>Jalankan <code style="display:inline">backend.py</code> di Termux, lalu pakai tombol "Compile Langsung ke .APK" di atas.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ BUILD PIPELINE OVERLAY ============ -->
+<div class="pipeline-overlay" id="pipelineOverlay" role="dialog" aria-modal="true" aria-label="Proses compile">
+  <div class="pipeline-card glass">
+    <div class="pipeline-icon" id="pipelineIcon"></div>
+    <div class="pipeline-title" id="pipelineTitle" aria-live="polite">Compiling…</div>
+    <div class="pipeline-steps" id="pipelineSteps"></div>
+    <div class="pipeline-bar"><div class="pipeline-bar-fill" id="pipelineBarFill"></div></div>
+  </div>
+</div>
+
+<!-- ============ HISTORY ============ -->
+<section class="history-section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">riwayat</span>
+      <h2 class="section-title">Project Kamu</h2>
+      <p class="section-sub">Tersimpan otomatis di browser ini. Unduh ulang kapan saja.</p>
+    </div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features-section" id="fitur">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">fitur</span>
+      <h2 class="section-title">Bukan Sekadar Wrapper</h2>
+      <p class="section-sub">Setiap project yang dihasilkan sudah dikonfigurasi penuh — bukan template kosong.</p>
+    </div>
+    <div class="bento" id="bentoGrid">
+      <div class="bento-item big glass reveal">
+        <div class="bento-icon">🔒</div>
+        <div class="bento-title">100% Diproses di Browser</div>
+        <div class="bento-desc">Tidak ada file yang diupload ke server manapun. Generate ikon, susun struktur project, tulis konfigurasi Gradle — semuanya berjalan langsung di perangkat kamu.</div>
+      </div>
+      <div class="bento-item glass reveal">
+        <div class="bento-icon">🎨</div>
+        <div class="bento-title">Ikon Otomatis</div>
+        <div class="bento-desc">Dibuat dari nama & warna aplikasimu, langsung jadi tanpa perlu desainer.</div>
+      </div>
+      <div class="bento-item glass reveal">
+        <div class="bento-icon">🌀</div>
+        <div class="bento-title">WebView Teroptimasi</div>
+        <div class="bento-desc">Zoom, cache offline, dan pull-to-refresh sudah dikonfigurasi dari awal.</div>
+      </div>
+      <div class="bento-item glass reveal">
+        <div class="bento-icon">🏷</div>
+        <div class="bento-title">Package ID Custom</div>
+        <div class="bento-desc">Kontrol penuh atas applicationId untuk publishing ke Play Store.</div>
+      </div>
+      <div class="bento-item glass reveal">
+        <div class="bento-icon">🕘</div>
+        <div class="bento-title">Riwayat Tersimpan</div>
+        <div class="bento-desc">Semua project yang pernah dibuat tersimpan dan bisa diunduh ulang.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="how-section" id="cara-kerja">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">proses</span>
+      <h2 class="section-title">Cara Kerja</h2>
+      <p class="section-sub">Empat langkah dari link ke aplikasi yang bisa di-install.</p>
+    </div>
+    <div class="how-list">
+      <div class="how-item reveal">
+        <div class="how-num">01</div>
+        <div class="how-body"><h3>Tempel URL atau upload HTML</h3><p>Masukkan alamat website yang mau dijadikan aplikasi, atau upload file HTML kamu sendiri.</p></div>
+      </div>
+      <div class="how-item reveal">
+        <div class="how-num">02</div>
+        <div class="how-body"><h3>Atur nama, ikon, dan package ID</h3><p>Sesuaikan identitas aplikasi — warna, orientasi layar, dan perilaku WebView.</p></div>
+      </div>
+      <div class="how-item reveal">
+        <div class="how-num">03</div>
+        <div class="how-body"><h3>Compile</h3><p>azra.co menyusun project Android lengkap — manifest, layout, dan konfigurasi Gradle — lalu mengemasnya jadi satu file .zip.</p></div>
+      </div>
+      <div class="how-item reveal">
+        <div class="how-num">04</div>
+        <div class="how-body"><h3>Build di Android Studio, install ke HP</h3><p>Buka project-nya, klik Run — file .apk langsung terpasang di perangkat kamu.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq-section" id="faq">
+  <div class="wrap" style="max-width:760px">
+    <div class="section-head reveal">
+      <span class="eyebrow">faq</span>
+      <h2 class="section-title">Pertanyaan Umum</h2>
+    </div>
+    <div id="faqList"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="glass footer-inner">
+      <div class="footer-top">
+        <div>
+          <div class="logo"><span class="logo-dot"></span>azra<span style="color:var(--text-3)">.</span>co</div>
+          <p class="footer-tagline">Compiler website-ke-Android untuk developer indie. Dibangun untuk dipakai sendiri, dibagikan untuk semua orang.</p>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <div class="footer-col-title">Produk</div>
+            <a href="#tool">Compiler</a>
+            <a href="#fitur">Fitur</a>
+            <a href="#faq">FAQ</a>
+          </div>
+          <div class="footer-col">
+            <div class="footer-col-title">Ekosistem</div>
+            <a href="#">ANTIHERO</a>
+            <a href="#">AzraDev</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 azra.co — Dirancang &amp; dibangun oleh AzraDev</span>
+        <span>Made with 🖤 in Termux</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast glass" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
